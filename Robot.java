@@ -4,7 +4,7 @@ public class Robot extends TimedRobot {
   private static final byte[] _buttons = {0,1,2,3,4}; //Private makes it so that only this class can use these variables, static means that its only initialized once, and final makes it so the variable doesnt change.
   private static final byte[] _axis = {1,2,3,4};
  //trying out arrays in order to manage complexity.
-
+final Joystick joystick = new Joystick(_ports[0]);
 private static final String turnAuto = "turnAuto"; //used to pick autonomous code in the driverstation
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
