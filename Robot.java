@@ -1,34 +1,27 @@
+//ALL OF THIS WAS DONE ON GITHUB, MAKE SURE TO IMPORT THE CORRECT LIBRARIES
 public class Robot extends TimedRobot {
   private static final byte[] _ports = {0,1,2,3,4,5}; //port numbers in an array
   private static final byte[] _buttons = {0,1,2,3,4}; //Private makes it so that only this class can use these variables, static means that its only initialized once, and final makes it so the variable doesnt change.
   private static final byte[] _axis = {1,2,3,4};
  //trying out arrays in order to manage complexity.
 
-final Compressor _compressor = new Compressor(_ports[0]);
-final DoubleSolenoid _dSolenoid = new DoubleSolenoid(_ports[0], _ports[1]); // you can find these values on the pcm
-final DigitalInput _limitSwitch = new DigitalInput(_ports[0]); //this is the DIO port the limit switch is plugged into.
-//put color detector code here
-
-final WPI_TalonSRX _motor = new WPI_TalonSRX(_ports[3]); //the motor controller in our testbed, you can find the port number in the Talon Tuner
-final Joystick _joystick = new Joystick(_ports[0]); //joystick, port number is seperate to the compressor or solenoid, you can change this in the driver station.
-
 private static final String turnAuto = "turnAuto"; //used to pick autonomous code in the driverstation
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
-
+final WPI_TALONFX motor = new WPI_TalonFX(2);
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
   @Override
   public void robotInit() {
-    _dSolenoid.set(Value.kForward); //sets the solenoid to foward, in this case it is whichever side is assigned to port 0.
-
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_chooser);
+   //Recalling newThread class, and converting it into thread wrapper class.
+    NewThread thread = new NewThread();
+    Thread threads = new Thread(thread);
+    
+    
   }
 
   /**
@@ -80,32 +73,16 @@ private static final String turnAuto = "turnAuto"; //used to pick autonomous cod
 
   /** This function is called once when teleop is enabled. */
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+    //starting a thread that will never end, essentially now our drive train has its own autonomy.
+    threads.start();
+  }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-
-if(_compressor.getPressureSwitchValue()){ //reads pressure switch value, if it is low (which it always is on the test bed) the following segment will run.
-_compressor.stop(); //most likely this will be _compressor.start(); but this is loud.
-}
-
-if( (_joystick.getRawAxis(_axis[0]) > .02) | (_joystick.getRawAxis(_axis[0]) < -.02) ){ //deadzone code, can adjust to get the smallest amount w/o drift.
-_motor.set(_joystick.getRawAxis(_axis[0]));
-}else{
-  _motor.set(0); //in any instance that motor value is set to anything other than 0, make sure that it somehow updates back to zero, this is just a safety precaution.
-}
-
-if(_joystick.getRawButton(_buttons[0])){
-_dSolenoid.toggle(); //swaps direction of the solenoid.
-  }
-  
-  if(_limitSwitch.get()){ //basically saying "is limit switch tripped?"
-  _motor.set(1); //if Limit switch is pressed, set motor to 1
-  }else{
-    _motor.set(0);
-  }
-
+    //this is the talonFX, we are using to test the concurrency of this system.
+motor.set(1);
   }
   /** This function is called once when the robot is disabled. */
   @Override
@@ -122,4 +99,8 @@ _dSolenoid.toggle(); //swaps direction of the solenoid.
   /** This function is called periodically during test mode. */
   @Override
   public void testPeriodic() {}
+}
+
+public void joystickVal(int port){
+  return joystick.getRawAxis(port);
 }
